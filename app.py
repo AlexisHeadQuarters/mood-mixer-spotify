@@ -2,16 +2,17 @@ import streamlit as st
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 import re
+import random
 
 # Sayfa ayarları
 st.set_page_config(page_title="Mood Mixer", page_icon="🎧", layout="centered")
 
 # Başlık ve açıklama
-st.title("🎧 Mood Mixer")
+st.title("🎧 Mood Mixer v2")
 st.markdown("**Herhangi bir Spotify playlistini istediğin moda göre otomatik karıştır!**")
-st.markdown("Mutlu, chill, enerjik, spor, odaklanma... Sen seç, gerisini ben halledeyim 🔥")
+st.markdown("Spotify'ın kendi akıllı öneri sistemiyle daha iyi sonuçlar 🔥 (Audio features artık yok, ama bu daha iyi!)")
 
-# Spotify OAuth ayarları (secrets'tan çekiliyor)
+# Spotify OAuth ayarları
 sp_oauth = SpotifyOAuth(
     client_id=st.secrets["SPOTIFY_CLIENT_ID"],
     client_secret=st.secrets["SPOTIFY_CLIENT_SECRET"],
@@ -19,7 +20,7 @@ sp_oauth = SpotifyOAuth(
     scope="playlist-read-private playlist-modify-public playlist-modify-private user-library-read"
 )
 
-# Query params'tan code'u al (OAuth callback)
+# Query params'tan code'u al
 code = st.query_params.get("code")
 
 # Session state ile token yönetimi
@@ -29,7 +30,6 @@ if "token_info" not in st.session_state:
         st.session_state.token_info = token_info
         st.rerun()
     else:
-        # Login butonu (yeni sekmede açılıyor)
         auth_url = sp_oauth.get_authorize_url()
         st.markdown(
             f"""
@@ -49,22 +49,22 @@ if "token_info" not in st.session_state:
             """,
             unsafe_allow_html=True
         )
-        st.info("Bağlanmak için butona tıkla, Spotify izin ekranı yeni sekmede açılacak.")
+        st.info("Bağlanmak için butona tıkla, izin ekranı yeni sekmede açılacak.")
         st.stop()
 
-# Token varsa refresh kontrolü yap
+# Token refresh
 token_info = st.session_state.token_info
 if sp_oauth.is_token_expired(token_info):
     token_info = sp_oauth.refresh_access_token(token_info['refresh_token'])
     st.session_state.token_info = token_info
 
-# Spotify client oluştur
+# Spotify client
 sp = spotipy.Spotify(auth=token_info['access_token'])
 user = sp.current_user()
-st.success(f"✅ Bağlandı: **{user['display_name']}** ({user['id']})")
+st.success(f"✅ Bağlandı: **{user['display_name']}**")
 
-# Kullanıcı arayüzü
-playlist_url = st.text_input("📋 Spotify playlist linkini buraya yapıştır:", placeholder="https://open.spotify.com/playlist/...")
+# Arayüz
+playlist_url = st.text_input("📋 Spotify playlist linkini yapıştır:", placeholder="https://open.spotify.com/playlist/...")
 mood = st.selectbox("🌈 Hedef mood'un ne olsun?", [
     "Happy 😄",
     "Chill 😌",
@@ -76,91 +76,74 @@ mood = st.selectbox("🌈 Hedef mood'un ne olsun?", [
     "Romantic ❤️"
 ])
 
-# Mood hedef özellikleri
-mood_targets = {
-    "Happy 😄": {"valence": 0.8, "energy": 0.7},
-    "Chill 😌": {"valence": 0.5, "energy": 0.3},
-    "Energetic ⚡": {"energy": 0.9, "danceability": 0.8},
-    "Workout 💪": {"energy": 0.95, "tempo": 130, "danceability": 0.7},
-    "Focus 🧠": {"energy": 0.4, "instrumentalness": 0.8},
-    "Party 🎉": {"danceability": 0.9, "energy": 0.9},
-    "Sad ☔": {"valence": 0.2, "energy": 0.4},
-    "Romantic ❤️": {"valence": 0.6, "acousticness": 0.7}
+# Mood'a göre recommendation parametreleri
+mood_params = {
+    "Happy 😄": {"target_valence": 0.9, "target_energy": 0.7, "target_danceability": 0.7},
+    "Chill 😌": {"target_valence": 0.5, "target_energy": 0.3, "min_instrumentalness": 0.4},
+    "Energetic ⚡": {"target_energy": 0.9, "target_danceability": 0.8},
+    "Workout 💪": {"target_energy": 0.95, "target_tempo": 130, "target_danceability": 0.7},
+    "Focus 🧠": {"target_energy": 0.4, "target_instrumentalness": 0.8, "target_acousticness": 0.6},
+    "Party 🎉": {"target_danceability": 0.9, "target_energy": 0.9, "target_valence": 0.8},
+    "Sad ☔": {"target_valence": 0.2, "target_energy": 0.4, "target_acousticness": 0.7},
+    "Romantic ❤️": {"target_valence": 0.6, "target_energy": 0.5, "target_acousticness": 0.8}
 }
 
-if st.button("🔥 MIX IT! Let's Do It!") and playlist_url:
-    with st.spinner("Playlist analiz ediliyor ve yeni vibe oluşturuluyor..."):
+if st.button("🔥 MIX IT! Yeni vibe hazırla") and playlist_url:
+    with st.spinner("Playlist analiz ediliyor, Spotify önerileri alınıyor..."):
         try:
-            # Playlist ID'yi güvenli şekilde çıkar (regex ile)
+            # Playlist ID çıkar
             match = re.search(r"playlist[/:]([A-Za-z0-9]{22})(?:\?|$)", playlist_url)
             if not match:
-                st.error("Geçersiz Spotify playlist linki! Lütfen doğru formatta bir link yapıştırın.\n\nÖrnek: https://open.spotify.com/playlist/37i9dQZF1DX... ")
+                st.error("Geçersiz playlist linki! Doğru formatta olduğundan emin ol.")
                 st.stop()
             
             playlist_id = match.group(1)
 
-            # Playlist şarkılarını al
+            # Playlistteki şarkıları al
             tracks = sp.playlist_tracks(playlist_id)["items"]
             track_ids = [item["track"]["id"] for item in tracks if item["track"] and item["track"]["id"]]
             
-            if not track_ids:
-                st.error("Bu playlistte şarkı bulunamadı veya erişim izniniz yok. Playlist'in herkese açık olduğundan emin olun.")
+            if len(track_ids) < 5:
+                st.error("Playlistte en az 5 şarkı olmalı ki iyi öneri alınabilsin!")
                 st.stop()
 
-            # Audio features al
-            features = sp.audio_features(track_ids)
+            # Rastgele 5 seed şarkı seç (Spotify max 5 seed kabul eder)
+            seed_tracks = random.sample(track_ids, 5)
 
-            # None gelen feature'ları filtrele
-            valid_pairs = [(tid, feat) for tid, feat in zip(track_ids, features) if feat is not None]
-            if not valid_pairs:
-                st.error("Şarkıların ses özellikleri alınamadı.")
+            # Mood parametrelerini al
+            params = mood_params[mood]
+            params["limit"] = 50  # 50 şarkı önerisi
+
+            # Recommendations al
+            recommendations = sp.recommendations(seed_tracks=seed_tracks, **params)
+
+            recommended_tracks = recommendations["tracks"]
+            recommended_ids = [track["id"] for track in recommended_tracks]
+
+            if not recommended_ids:
+                st.error("Öneri alınamadı, farklı bir playlist dene.")
                 st.stop()
-
-            track_ids, features = zip(*valid_pairs)
-
-            target = mood_targets[mood]
-
-            # Benzerlik skoru (Euclidean distance)
-            def similarity(feat):
-                score = 0
-                for key, val in target.items():
-                    if key in feat and feat[key] is not None:
-                        # Tempo için özel işlem (eğer varsa)
-                        if key == "tempo" and val > 100:
-                            diff = min(abs(feat[key] - val), abs(feat[key] - (val - 20)))  # tempo yakınlığı
-                        else:
-                            diff = feat[key] - val
-                        score += diff ** 2
-                return score ** 0.5
-
-            # En yakın 50 şarkıyı seç
-            scored = sorted(zip(track_ids, features), key=lambda x: similarity(x[1]))
-            recommended_ids = [tid for tid, _ in scored[:50]]
 
             # Yeni playlist oluştur
-            new_playlist_name = f"Mood Mix: {mood} 🎯"
             new_playlist = sp.user_playlist_create(
                 user=user["id"],
-                name=new_playlist_name,
+                name=f"Mood Mix: {mood} 🎯 (v2)",
                 public=True,
-                description="Mood Mixer ile oluşturuldu 🎧 https://mixer.alxishq.site"
+                description="Mood Mixer v2 ile Spotify önerileriyle hazırlandı 🎧 https://mixer.alxishq.site"
             )
 
-            # Şarkıları ekle (100'erli parçalar halinde, Spotify limiti)
+            # Şarkıları 100'erli ekle
             for i in range(0, len(recommended_ids), 100):
                 sp.playlist_add_items(new_playlist["id"], recommended_ids[i:i+100])
 
-            st.success("✅ Yeni playlist hazırlandı!")
+            st.success("✅ Yeni mood playlistin hazır!")
             st.balloons()
             st.markdown(f"### 🎶 **{new_playlist['name']}** ({len(recommended_ids)} şarkı)")
             st.markdown(f"→ [Spotify'da Aç]({new_playlist['external_urls']['spotify']})")
 
-        except spotipy.SpotifyException as e:
-            st.error(f"Spotify hatası: {e.msg if hasattr(e, 'msg') else str(e)}")
-            st.info("Playlist herkese açık mı? Veya link doğru mu?")
         except Exception as e:
-            st.error(f"Beklenmeyen hata: {str(e)}")
-            st.info("Linki ve bağlantıyı kontrol edin.")
+            st.error(f"Hata: {str(e)}")
+            st.info("Playlist herkese açık mı? Link doğru mu? Tekrar dene.")
 
 # Alt bilgi
-st.caption("Made with ❤️ by Sad_Always – A AlexisHq project: https://alxishq.site")
+st.caption("Made with ❤️ by Sad_Always – Mood Mixer v2 (Recommendations powered) | https://alxishq.site")
