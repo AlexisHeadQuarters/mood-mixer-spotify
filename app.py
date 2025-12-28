@@ -4,10 +4,68 @@ from spotipy.oauth2 import SpotifyOAuth
 import re
 import random
 
-st.set_page_config(page_title="Mood Mixer", page_icon="ᯤ", layout="centered")
+# Sayfa ayarları - daha modern ve alxishq tarzı
+st.set_page_config(page_title="Mood Mixer", page_icon="🎧", layout="centered")
+
+# Custom CSS - alxishq.site havası: temiz, modern, yeşil vurgular
+st.markdown("""
+    <style>
+    .main {
+        background: linear-gradient(135deg, #121212 0%, #1a1a1a 100%);
+        color: white;
+    }
+    .stButton>button {
+        background: linear-gradient(90deg, #1DB954, #1ed760);
+        color: white;
+        font-weight: bold;
+        border: none;
+        border-radius: 16px;
+        padding: 14px 32px;
+        font-size: 20px;
+        box-shadow: 0 4px 15px rgba(29, 185, 84, 0.4);
+        transition: all 0.3s;
+    }
+    .stButton>button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(29, 185, 84, 0.6);
+    }
+    .stTextInput>div>div>input {
+        background: #282828;
+        color: white;
+        border-radius: 12px;
+        border: 1px solid #404040;
+        padding: 12px;
+    }
+    .stSelectbox>div>div>select {
+        background: #282828;
+        color: white;
+        border-radius: 12px;
+    }
+    h1 {
+        font-size: 3.5rem;
+        background: linear-gradient(90deg, #1DB954, #1ed760);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-align: center;
+        margin-bottom: 10px;
+    }
+    .caption {
+        text-align: center;
+        color: #b3b3b3;
+        font-size: 14px;
+        margin-top: 50px;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
 st.title("🎧 Mood Mixer v2")
-st.markdown("**Shuffle and remix your playlist with a fresh vibe!** 🔥")
+
+st.markdown("""
+    <div style="text-align: center; font-size: 1.4rem; color: #b3b3b3; margin-bottom: 30px;">
+        <strong>Remix your playlist with a fresh vibe</strong><br>
+        Shuffle, reorder and give it your personal touch 🔥
+    </div>
+    """, unsafe_allow_html=True)
 
 # OAuth
 sp_oauth = SpotifyOAuth(
@@ -28,12 +86,30 @@ if "token_info" not in st.session_state:
     else:
         auth_url = sp_oauth.get_authorize_url()
         st.markdown(
-            f'<a href="{auth_url}" target="_blank"><button style="padding:15px 30px; font-size:20px; background:#1DB954; color:white; border:none; border-radius:12px; cursor:pointer;">🔗 Connect with Spotify</button></a>',
+            f'''
+            <div style="text-align: center; margin: 40px 0;">
+                <a href="{auth_url}" target="_blank">
+                    <button style="
+                        padding: 18px 40px;
+                        font-size: 22px;
+                        background: linear-gradient(90deg, #1DB954, #1ed760);
+                        color: white;
+                        border: none;
+                        border-radius: 16px;
+                        cursor: pointer;
+                        box-shadow: 0 6px 20px rgba(29, 185, 84, 0.4);
+                    ">
+                        🔗 Connect with Spotify
+                    </button>
+                </a>
+            </div>
+            ''',
             unsafe_allow_html=True
         )
-        st.info("Press the Button, Connect by new tab.")
+        st.info("👆 Press the button above to connect (opens in new tab)")
         st.stop()
 
+# Token refresh
 token_info = st.session_state.token_info
 if sp_oauth.is_token_expired(token_info):
     token_info = sp_oauth.refresh_access_token(token_info["refresh_token"])
@@ -41,15 +117,28 @@ if sp_oauth.is_token_expired(token_info):
 
 sp = spotipy.Spotify(auth=token_info["access_token"])
 user = sp.current_user()
+
 st.success(f"✅ Connected: **{user['display_name']}**")
 
-playlist_url = st.text_input("📋 Playlist link:", placeholder="https://open.spotify.com/playlist/...")
-mood = st.selectbox("🌈 Select a Mood:", [
-    "Happy 😄", "Chill 😌", "Energetic ⚡", "Workout 💪",
-    "Focus 🧠", "Party 🎉", "Sad ☔", "Romantic ❤️"
-])
+# Kullanıcı arayüzü
+col1, col2 = st.columns(2)
+with col1:
+    playlist_url = st.text_input("📋 Playlist link:", placeholder="https://open.spotify.com/playlist/...")
+with col2:
+    mood = st.selectbox("🌈 Select a Mood:", [
+        "Happy 😄", "Chill 😌", "Energetic ⚡", "Workout 💪",
+        "Focus 🧠", "Party 🎉", "Sad ☔", "Romantic ❤️"
+    ])
 
-if st.button("🔥 MIX IT! Create new vibe") and playlist_url:
+# Yeni: Kullanıcı playlist ismini belirlesin
+custom_name = st.text_input("✨ New playlist name (optional):", 
+                            placeholder="e.g. My Chill Vibes 🌙, Party Starter 🔥, Sad Hours ☔")
+
+if st.button("🔥 MIX IT! Create new vibe"):
+    if not playlist_url:
+        st.error("Please paste a playlist link!")
+        st.stop()
+
     with st.spinner("Remixing your playlist with fresh energy..."):
         try:
             match = re.search(r"playlist[/:]([A-Za-z0-9]{22})", playlist_url)
@@ -58,11 +147,10 @@ if st.button("🔥 MIX IT! Create new vibe") and playlist_url:
                 st.stop()
             playlist_id = match.group(1)
 
-            # Tüm şarkıları al (100'den fazla varsa hepsini)
+            # Tüm şarkıları al (100+ için pagination)
             track_ids = []
             results = sp.playlist_tracks(playlist_id)
             track_ids.extend([item["track"]["id"] for item in results["items"] if item["track"] and item["track"]["id"]])
-            
             while results["next"]:
                 results = sp.next(results)
                 track_ids.extend([item["track"]["id"] for item in results["items"] if item["track"] and item["track"]["id"]])
@@ -71,19 +159,22 @@ if st.button("🔥 MIX IT! Create new vibe") and playlist_url:
                 st.error("Not enough songs in the playlist!")
                 st.stop()
 
-            # Mood'a göre hafif sıralama (rastgele ama mood ismine göre seed)
-            random.seed(hash(mood))  # Aynı mood aynı sıralama
+            # Mood'a göre tekrarlanabilir shuffle
+            random.seed(hash(mood) + hash(custom_name or ""))
             random.shuffle(track_ids)
 
-            # Yeni playlist
+            # Playlist ismi: kullanıcı yazdıysa onu, yoksa otomatik
+            playlist_name = custom_name.strip() or f"Mood Mix: {mood} 🎯"
+
+            # Yeni playlist oluştur
             new_playlist = sp.user_playlist_create(
                 user["id"],
-                name=f"Mood Mix: {mood} 🎯",
+                name=playlist_name,
                 public=True,
-                description="Remixed with Mood Mixer V2 🎧 https://mixer.alxishq.site"
+                description="Remixed with Mood Mixer by Sad_Always 🎧 https://mixer.alxishq.site"
             )
 
-            # Şarkıları 100'erli ekle
+            # Şarkıları ekle
             for i in range(0, len(track_ids), 100):
                 sp.playlist_add_items(new_playlist["id"], track_ids[i:i+100])
 
@@ -95,4 +186,9 @@ if st.button("🔥 MIX IT! Create new vibe") and playlist_url:
         except Exception as e:
             st.error(f"Error: {str(e)}")
 
-st.caption("Made with ❤️ by Sad_Always – Mood Mixer v2 A AlexisHq project.")
+st.markdown("""
+    <div class="caption">
+        Made with ❤️ by Sad_Always – A AlexisHq project.<br>
+        <a href="https://alxishq.site" style="color:#1DB954;">alxishq.site</a>
+    </div>
+    """, unsafe_allow_html=True)
