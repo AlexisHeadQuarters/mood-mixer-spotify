@@ -66,7 +66,7 @@ st.markdown("""
 # YENİ ÜST ANIMASYON - Mood Mixer'a özel, neon green equalizer wave (remix hissi 🔥)
 st.markdown("""
     <div style="text-align: center; margin-bottom: 30px;">
-        <img src="https://i.imgur.com/2Yp6Z3g.gif" width="450" style="border-radius: 20px; box-shadow: 0 8px 30px rgba(29, 185, 84, 0.4);">
+        <img src="https://imgur.com/gallery/black-white-photo-antwerp-IcQa4yl" width="450" style="border-radius: 20px; box-shadow: 0 8px 30px rgba(29, 185, 84, 0.4);">
     </div>
     """, unsafe_allow_html=True)
 
