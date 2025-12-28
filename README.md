@@ -36,10 +36,10 @@ Just paste a Spotify playlist link, choose your mood →
 
 ---
 ## 🛠️ Tech Stack
-- **Python**
-- **Streamlit** — Web interface
-- **Spotipy** — Spotify API wrapper
-- **Spotify OAuth 2.0**
+- **Python** — Core language
+- **Streamlit** — Modern web interface framework
+- **Spotipy** — Official Spotify API wrapper for Python
+- **Spotify OAuth 2.0** — Secure authentication system
 
 ---
 ## 📸 Site Screenshot
