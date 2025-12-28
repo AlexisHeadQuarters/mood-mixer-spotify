@@ -89,8 +89,8 @@ mood_targets = {
     "Romantic ❤️": {"valence": 0.6, "acousticness": 0.7}
 }
 
-if st.button("🔥 MIX IT! Karıştır Bakalım") and playlist_url:
-    with st.spinner("Playlist analiz ediliyor ve yeni vibe oluşturuluyor..."):
+if st.button("🔥 MIX IT! Lets Do IT") and playlist_url:
+    with st.spinner("The playlist is being analyzed and a new vibe is being created..."):
         try:
             # Playlist ID çıkar
             playlist_id = playlist_url.split("/")[-1].split("?")[0]
@@ -130,14 +130,14 @@ if st.button("🔥 MIX IT! Karıştır Bakalım") and playlist_url:
             )
             sp.playlist_add_items(new_playlist["id"], recommended_ids)
 
-            st.success("✅ Yeni playlist hazır!")
+            st.success("✅ Your new Playlist is Finished!")
             st.balloons()
             st.markdown(f"### 🎶 **{new_playlist['name']}** ({len(recommended_ids)} şarkı)")
             st.markdown(f"→ [Spotify'da Aç]({new_playlist['external_urls']['spotify']})")
 
         except Exception as e:
             st.error(f"Bir hata oldu: {str(e)}")
-            st.info("Playlist linkinin doğru olduğundan emin ol.")
+            st.info("Be sure your Playlist Link is correct")
 
 # Alt bilgi
-st.caption("Made with ❤️ by sen – Canlı kullanım: https://mixer.alxishq.site")
+st.caption("Made with ❤️ by Sad_Always – A AlexisHq project: https://alxishq.site")
