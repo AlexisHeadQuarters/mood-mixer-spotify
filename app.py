@@ -7,7 +7,7 @@ import random
 # Sayfa ayarları
 st.set_page_config(page_title="Mood Mixer", page_icon="🎧", layout="centered")
 
-# Custom CSS + Animasyonlar + alxishq tarzı güzelleştirme
+# Custom CSS + alxishq tarzı
 st.markdown("""
     <style>
     .main {
@@ -63,10 +63,10 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# Üst animasyon - Spotify music player vibe
+# YENİ ÜST ANIMASYON - Mood Mixer'a özel, neon green equalizer wave (remix hissi 🔥)
 st.markdown("""
     <div style="text-align: center; margin-bottom: 30px;">
-        <img src="https://cdn.dribbble.com/userupload/24777404/file/original-7371fc0a0aa3cc7e00dc614a8d2b4071.gif" width="400" style="border-radius: 20px; box-shadow: 0 8px 30px rgba(29, 185, 84, 0.3);">
+        <img src="https://i.imgur.com/2Yp6Z3g.gif" width="450" style="border-radius: 20px; box-shadow: 0 8px 30px rgba(29, 185, 84, 0.4);">
     </div>
     """, unsafe_allow_html=True)
 
@@ -79,7 +79,7 @@ st.markdown("""
     </div>
     """, unsafe_allow_html=True)
 
-# OAuth (aynı kaldı)
+# OAuth
 sp_oauth = SpotifyOAuth(
     client_id=st.secrets["SPOTIFY_CLIENT_ID"],
     client_secret=st.secrets["SPOTIFY_CLIENT_SECRET"],
@@ -121,6 +121,7 @@ if "token_info" not in st.session_state:
         st.info("👆 Press the button above to connect (opens in new tab)")
         st.stop()
 
+# Token refresh
 token_info = st.session_state.token_info
 if sp_oauth.is_token_expired(token_info):
     token_info = sp_oauth.refresh_access_token(token_info["refresh_token"])
@@ -191,14 +192,7 @@ if st.button("🔥 MIX IT! Create new vibe"):
         except Exception as e:
             st.error(f"Error: {str(e)}")
 
-# Alt animasyon - neon green equalizer wave (remix hissi için)
-st.markdown("""
-    <div style="text-align: center; margin: 40px 0;">
-        <img src="https://i.pinimg.com/originals/3b/5d/89/3b5d89de71c8b1c520749df21d815f63.gif" width="500" style="border-radius: 20px;">
-    </div>
-    """, unsafe_allow_html=True)
-
-# Güzelleştirilmiş alt yazı
+# Güzelleştirilmiş alt yazı (alttaki animasyon kaldırıldı)
 st.markdown("""
     <div class="caption">
         Made with ❤️ by <strong>Sad_Always</strong><br>
