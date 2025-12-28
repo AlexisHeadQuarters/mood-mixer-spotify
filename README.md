@@ -15,7 +15,7 @@ Just paste a Spotify playlist link, choose your mood →
 
 ---
 ## 🚀 Live Demo
-👉 **https://mixer.alxishq.site**  
+👉 **https://mixer.alexishq.site**  
 (if not working, try)  
 👉 **https://mood-mixer-alxishq.streamlit.app/**
 
@@ -73,7 +73,7 @@ See the [LICENSE](LICENSE) file for full details.
 ## 👨‍💻 Author
 Made with ❤️ by **Sad_Always**  
 An **AlexisHQ** project  
-🌐 https://alxishq.site
+🌐 https://alexishq.site
 
 ---
 ## ⭐ Support
