@@ -43,7 +43,7 @@ Just paste a Spotify playlist link, choose your mood →
 
 ---
 ## 📸 Site Screenshot
-![Mood Mixer Screenshot](https://raw.githubusercontent.com/Sad_Always/mood-mixer-spotify/main/screenshot.png)
+![Mood Mixer Screenshot](https://raw.githubusercontent.com/AlexisHeadQuarters/mood-mixer-spotify/main/screenshot.png)
 
 ---
 ## ⚠️ Important Disclaimer
@@ -73,7 +73,7 @@ See the [LICENSE](LICENSE) file for full details.
 ## 👨‍💻 Author
 Made with ❤️ by **Sad_Always**  
 An **AlexisHQ** project  
-🌐 https://alexishq.site
+🌐 https://alexishq.com.tr
 
 ---
 ## ⭐ Support
