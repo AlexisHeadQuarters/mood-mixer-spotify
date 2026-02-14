@@ -1,6 +1,5 @@
 # 🎧 Mood Mixer
 ![Python](https://img.shields.io/badge/Python-3.9%2B-blue?logo=python)
-![Streamlit](https://img.shields.io/badge/Streamlit-Web_App-FF4B4B?logo=streamlit)
 ![Spotify](https://img.shields.io/badge/Spotify-API-1DB954?logo=spotify)
 ![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)
 ![Status](https://img.shields.io/badge/Status-Live-success)
@@ -14,10 +13,8 @@ Just paste a Spotify playlist link, choose your mood →
 ✨ **a brand new remixed playlist is generated and added to your Spotify account in seconds.**
 
 ---
-## 🚀 Live Demo
-👉 **https://mixer.alexishq.site**  
-(if not working, try)  
-👉 **https://mood-mixer-alxishq.streamlit.app/**
+## 🚀 Live
+👉 **https://mixer.alexishq.com.tr**  
 
 ---
 ## 🎬 Demo Preview (GIF)
